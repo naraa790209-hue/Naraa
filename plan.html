@@ -26,10 +26,6 @@
   .legend .sw { display:inline-block; width:20px; height:14px; border:1px solid #000; }
   .note { margin-top:14px; font-size:11px; font-style:italic; }
   .sig { margin-top: 30px; font-size: 12px; text-align:right; }
-  .edt { border-bottom: 1px dashed #94a3b8; padding: 0 3px; cursor: text; transition: background .15s; min-width: 40px; display: inline-block; }
-  .edt:hover { background: #fef3c7; border-bottom-color: #f59e0b; }
-  .edt:focus { background: #fef9c3; border-bottom-color: #ca8a04; outline: none; }
-  @media print { .edt { border: none; background: transparent !important; } }
   @media print { body { padding: 0; } .toolbar, .no-print { display:none !important; } }
 </style></head>
 <body>
@@ -60,17 +56,6 @@ const SUPABASE_URL = window.SUPABASE_URL || "https://dehxrmupnbilwlxsovpi.supaba
 const SUPABASE_KEY = window.SUPABASE_KEY || "sb_publishable_VRNBeM9nqwFlrDhT2-wD3w_Gp3O85uy";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let EDIT_MODE = false;
-
-function loadFields() {
-  window.APPROVER_TEXT = localStorage.getItem('sig_approver') || 'АРГА ЗҮЙЧ ..............................';
-  window.APPROVE_DATE = localStorage.getItem('sig_approveDate') || '2026 оны 09-р сарын ..... өдөр';
-  window.TEACHER_NAME_DISPLAY = localStorage.getItem('sig_teacher') || (window.TEACHER_NAME || 'Г.ӨЛЗИЙБАЯР');
-}
-function saveField(key, val) {
-  localStorage.setItem('sig_' + key, (val || '').trim());
-  loadFields();
-}
-loadFields();
 let OVERRIDES = { 1:[], 2:[], 3:[], 4:[] };
 
 async function loadOverrides() {
@@ -115,30 +100,7 @@ async function saveToSystem() {
     files: [{ src: publicUrl, label: `${groupNames[lvl]}_жилийн_матриц.html` }]
   });
   if (insErr) { alert("Хадгалахад алдаа: "+insErr.message); return; }
-  showShareQR(publicUrl, `${groupNames[lvl]} бүлгийн жилийн төлөвлөгөө`);
-}
-
-function showShareQR(url, title) {
-  let modal = document.getElementById('qrShareModal');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'qrShareModal';
-    modal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center;padding:20px;font-family:Arial,sans-serif';
-    modal.onclick = e => { if (e.target === modal) modal.style.display = 'none'; };
-    modal.innerHTML = `<div id="qrShareBox" style="background:#fff;border-radius:14px;max-width:460px;width:100%;padding:24px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.3)"></div>`;
-    document.body.appendChild(modal);
-  }
-  const qrApi = 'https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=10&data=' + encodeURIComponent(url);
-  document.getElementById('qrShareBox').innerHTML = `
-    <h2 style="color:#2e7d32;margin-bottom:6px;font-size:1.2em">📱 QR-ээр хуваалцах</h2>
-    <p style="color:#555;font-size:.9em;margin-bottom:14px">${title}</p>
-    <img src="${qrApi}" alt="QR" style="border:1px solid #ddd;border-radius:8px;padding:6px;background:#fff;max-width:100%;height:auto">
-    <div style="margin:14px 0;padding:10px;background:#f5f5f5;border-radius:6px;font-size:.82em;word-break:break-all;color:#555;text-align:left">${url}</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
-      <button onclick="navigator.clipboard.writeText('${url}');this.textContent='✓ Хуулагдлаа';setTimeout(()=>this.textContent='🔗 Линк хуулах',1500)" style="padding:10px 16px;background:#2e7d32;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600">🔗 Линк хуулах</button>
-      <button onclick="document.getElementById('qrShareModal').style.display='none'" style="padding:10px 16px;background:#f5f5f5;color:#333;border:1px solid #ddd;border-radius:6px;cursor:pointer;font-weight:600">Хаах</button>
-    </div>`;
-  modal.style.display = 'flex';
+  alert(`✅ Амжилттай! Одоо системийн Хөтөлбөр төлөвлөгөө → ${groupNames[lvl]} бүлэг → Жилийн tab-т орсон байгаа.\n\nАрга зүйч нэвтэрч батлах боломжтой боллоо.`);
 }
 async function resetLevel() {
   const lvl = currentLevel();
@@ -315,7 +277,7 @@ function render(level) {
   let html = `
     <div class="head">
       <div class="right">
-        <strong>БАТЛАВ:</strong> <span contenteditable="true" class="edt" onblur="saveField('approver', this.innerText)">${window.APPROVER_TEXT}</span> · <span contenteditable="true" class="edt" onblur="saveField('approveDate', this.innerText)">${window.APPROVE_DATE}</span>
+        <strong>БАТЛАВ:</strong> АРГА ЗҮЙЧ .............................. · 2026 оны 09-р сарын ..... өдөр
       </div>
       <h1>${L.title} БҮЛГИЙН ХӨГЖМИЙН СУРГАЛТЫН</h1>
       <h1>ЖИЛИЙН ТӨЛӨВЛӨЛТ</h1>
@@ -380,7 +342,7 @@ function render(level) {
 
     <div class="sig">
       ХӨТӨЛБӨР БОЛОВСРУУЛСАН:<br>
-      ХӨГЖМИЙН БАГШ <strong contenteditable="true" class="edt" onblur="saveField('teacher', this.innerText)">${window.TEACHER_NAME_DISPLAY}</strong>
+      ХӨГЖМИЙН БАГШ <strong>Г.ӨЛЗИЙБАЯР</strong>
     </div>`;
 
   document.getElementById("plan").innerHTML = html;

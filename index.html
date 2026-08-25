@@ -128,19 +128,6 @@ const SHARED_URL = window.SUPABASE_URL_SHARED || "https://dehxrmupnbilwlxsovpi.s
 const SHARED_KEY = window.SUPABASE_KEY_SHARED || "sb_publishable_VRNBeM9nqwFlrDhT2-wD3w_Gp3O85uy";
 const sbShared = (SHARED_URL && SHARED_KEY && SHARED_URL !== SUPABASE_URL) ? supabase.createClient(SHARED_URL, SHARED_KEY) : null;
 
-// 🏫 СӨБ_БҮЛГИЙН_БАГШ SUPABASE — цэцэрлэгийн систем (нэмэлт)
-// Хэрэв тохируулагдсан бол activities, assessments-ыг арга зүйч/эрхлэгчид харагдуулна
-const SCHOOL_URL = window.SUPABASE_URL_SCHOOL || "";
-const SCHOOL_KEY = window.SUPABASE_KEY_SCHOOL || "";
-const sbSchool = (SCHOOL_URL && SCHOOL_KEY && SCHOOL_URL !== SUPABASE_URL) ? supabase.createClient(SCHOOL_URL, SCHOOL_KEY) : null;
-async function schoolWrite(table, data) {
-  if (!sbSchool) return;
-  try {
-    const payload = Array.isArray(data) ? data : { ...data, _source: 'music_teacher', _teacher: window.TEACHER_NAME || '' };
-    await sbSchool.from(table).insert(payload);
-  } catch(e) { console.warn('School sync failed:', e); }
-}
-
 const ELEMENTS = [
   { id: "agu1", name: "1-р агуулга", icon: "①", desc: "Сонсох хөгжим · Хоолойны дасгал · Шинэ дуу" },
   { id: "agu2", name: "2-р агуулга", icon: "②", desc: "Хоолойны дасгал · Давтах дуу · Хэмнэлт тоглоом" },
@@ -537,7 +524,6 @@ function render() {
       </nav>
     </header>`;
   let body = "";
-  if (state.role === 'parent' && state.view === 'announcements') { state.view = 'parentView'; }
   if (state.view === "parentView") body = renderParentView();
   else if (state.view === "methodistHome") body = renderMethodistHome();
   else if (state.view === "home") body = renderHome();
@@ -719,6 +705,10 @@ function renderHome() {
       <div class="card c2" onclick="state.view='planGroups';render()">
         <span class="element-icon">📋</span><h3>Хөтөлбөр төлөвлөгөө</h3>
         <p>📆 Жилийн, сарын, ээлжит төлөвлөгөө</p></div>
+      <div class="card c3" style="position:relative" onclick="state.view='tasks';render()">
+        ${badge('tasks')}
+        <span class="element-icon">📌</span><h3>Үүрэг даалгаврын биелэлт</h3>
+        <p>🗂 Ажлын хэсэг, гүйцэтгэлийн тайлан</p></div>
       <div class="card c4" onclick="state.view='assessGroups';render()">
         <span class="element-icon">📊</span><h3>Хүүхдийн хөгжлийн үнэлгээ</h3>
         <p>🌱📈🏆 Гараа, явц, үр дүн, шалгуур</p></div>
@@ -731,9 +721,16 @@ function renderHome() {
       <div class="card c3" onclick="state.view='monthlyReport';render()">
         <span class="element-icon">📊</span><h3>Сарын тайлан</h3>
         <p>📅 Автомат нэгтгэсэн тайлан PDF</p></div>
+      <div class="card c7" onclick="state.view='events';render()">
+        <span class="element-icon">🎭</span><h3>Тайлант тоглолт, өдөрлөг</h3>
+        <p>🎪🎊 Арга хэмжээний бэлтгэл</p></div>
+      <div class="card c9" style="position:relative" onclick="state.view='announcements';render()">
+        ${badge('announcements')}
+        <span class="element-icon">📢</span><h3>Зар мэдээ, үйл ажиллагаа</h3>
+        <p>🌟 Бүх эцэг эхэд харагдана</p></div>
       <div class="card c10" style="position:relative" onclick="state.view='methodist';render()">
         ${badge('methodist_notes')}
-        <span class="element-icon">👔</span><h3>Арга зүйч, эрхлэгчээс ирсэн үүрэг</h3>
+        <span class="element-icon">👔</span><h3>Арга зүйч, эрхлэгч</h3>
         <p>📖 Хяналт, зөвлөгөө, заавар</p></div>
       <div class="card c1" onclick="state.view='diary';render()">
         <span class="element-icon">📔</span><h3>Өдрийн тэмдэглэл</h3>
@@ -1066,14 +1063,6 @@ function renderPlanGroups() {
           <h3>Сарын төлөвлөгөө үүсгэгч</h3>
           <p>🎵 Дуу, хөгжимт хөдөлгөөн, сонсох хөгжим · 4 хувилбар · Word татах</p>
           <span class="badge">Арга зүйч батлах хэсэгтэй</span>
-        </div>
-      </a>
-      <a href="downloads.html" target="_blank" style="text-decoration:none;color:inherit">
-        <div class="card c4" style="cursor:pointer;background:linear-gradient(135deg,#e8f5e9,#c8e6c9)">
-          <span class="element-icon">📥</span>
-          <h3>Бэлэн төлөвлөгөөний сан</h3>
-          <p>📄 45 Word файл · 576 ээлжит хичээл · 4 бүлэгт бэлэн — татаж ашиглана</p>
-          <span class="badge" style="background:#2e7d32;color:#fff">ШИНЭ</span>
         </div>
       </a>
     </div>
@@ -1710,9 +1699,7 @@ async function setMusicStatus(childId, level, category, num, status) {
     const newStatus = cur.status === status ? null : status;
     await sb.from('music_criteria_checks').update({status: newStatus, updated_at: new Date().toISOString()}).eq('id', cur.id);
   } else {
-    const rec = {child_id: childId, level, category, criterion_num: num, status};
-    await sb.from('music_criteria_checks').insert(rec);
-    schoolWrite('music_criteria_checks', rec);
+    await sb.from('music_criteria_checks').insert({child_id: childId, level, category, criterion_num: num, status});
   }
   await loadAll(); render();
 }
@@ -1723,9 +1710,7 @@ async function setMusicNote(childId, level, category, num, note) {
     if ((cur.note||'') === note) return;
     await sb.from('music_criteria_checks').update({note}).eq('id', cur.id);
   } else if (note.trim()) {
-    const rec = {child_id: childId, level, category, criterion_num: num, note};
-    await sb.from('music_criteria_checks').insert(rec);
-    schoolWrite('music_criteria_checks', rec);
+    await sb.from('music_criteria_checks').insert({child_id: childId, level, category, criterion_num: num, note});
   } else return;
   await loadAll();
 }
@@ -2502,10 +2487,7 @@ async function saveActivity(e, id) {
     media, files
   };
   if (id) await sb.from('activities').update(data).eq('id', id);
-  else {
-    await sb.from('activities').insert(data);
-    schoolWrite('activities', { ...data, group_id: 'music' });
-  }
+  else await sb.from('activities').insert(data);
   await loadAll(); closeModal(); render();
   return false;
 }
@@ -4528,14 +4510,14 @@ function renderParentView() {
   if (!child) return `<div class="empty">Хүүхдийн мэдээлэл олдсонгүй.</div>`;
   state.assessChild = child.id;
   const notifBanner = renderNotifBanner();
+  const pinned = ANNOUNCEMENTS.filter(a => a.pinned).slice(0,2);
   const g = GROUPS.find(gr => (CHILDREN[gr.id]||[]).some(c => c.id === child.id));
-  const chatCount = (MESSAGES[child.id]||[]).length;
   const banner = notifBanner + `
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:16px">
-      <div style="background:linear-gradient(135deg,#3b82f6,#6366f1);color:white;padding:14px 18px;border-radius:12px;cursor:pointer" onclick="state.view='chat';render()">
-        <div style="font-weight:600">💬 Багшийн зурвас</div>
-        <div style="font-size:12px;opacity:0.9;margin-top:2px">Багштайгаа шууд харилцах</div>
-        <div style="font-size:12px;opacity:0.9;margin-top:6px">${chatCount} зурвас</div>
+      <div style="background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:white;padding:14px 18px;border-radius:12px;cursor:pointer" onclick="state.view='announcements';render()">
+        <div style="font-weight:600">📢 Зар мэдээ, үйл ажиллагаа</div>
+        <div style="font-size:12px;opacity:0.9;margin-top:2px">Цэцэрлэгийн бүх мэдээллийг нэг дор</div>
+        ${pinned.length?pinned.map(a=>`<div style="font-size:12px;opacity:0.9;margin-top:6px">📌 ${escapeHTML(a.title)}</div>`).join(""):''}
       </div>
       ${g?`
         <div style="background:linear-gradient(135deg,#ec4899,#f59e0b);color:white;padding:14px 18px;border-radius:12px;cursor:pointer" onclick="state.actGroup='${g.id}';state.view='activities';render()">
@@ -4666,9 +4648,9 @@ async function saveEntry(e, section, sub) {
     if (src) media.push({ type: f.type.startsWith("video")?"video":"image", src, label: f.name });
   }
   if (url) media.push({ type: "link", src: url, label: url });
-  const assessData = { child_id: state.assessChild, section, subsection: sub||null, date: date||null, title, text, media };
-  await sb.from('assessments').insert(assessData);
-  schoolWrite('assessments', { ...assessData, group_id: 'music' });
+  await sb.from('assessments').insert({
+    child_id: state.assessChild, section, subsection: sub||null, date: date||null, title, text, media
+  });
   await loadAll(); closeModal(); render();
   return false;
 }

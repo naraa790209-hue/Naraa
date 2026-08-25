@@ -20,10 +20,6 @@
   .meta-label { background:#d1fae5; font-weight:600; vertical-align:middle }
   .meta-value { background:#f0fdf4 }
   .sig { margin-top: 30px; font-size: 12px; text-align:left; }
-  .edt { border-bottom: 1px dashed #94a3b8; padding: 0 3px; cursor: text; transition: background .15s; min-width: 40px; display: inline-block; }
-  .edt:hover { background: #fef3c7; border-bottom-color: #f59e0b; }
-  .edt:focus { background: #fef9c3; border-bottom-color: #ca8a04; outline: none; }
-  @media print { .edt { border: none; background: transparent !important; } }
   @media print { body { padding: 0; } .toolbar { display:none } }
 </style></head>
 <body>
@@ -67,18 +63,6 @@ const SUPABASE_URL = window.SUPABASE_URL || "https://dehxrmupnbilwlxsovpi.supaba
 const SUPABASE_KEY = window.SUPABASE_KEY || "sb_publishable_VRNBeM9nqwFlrDhT2-wD3w_Gp3O85uy";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let OVERRIDES = {}; // { "level-month": {theme, newSong, ...} }
-
-function loadFields() {
-  window.SIG_ORG = localStorage.getItem('sig_org') || (window.TEACHER_SCHOOL ? (window.TEACHER_SCHOOL.toUpperCase() + '-ИЙН') : 'ГУРВАНБУЛАГ СУМЫН ЦЭЦЭРЛЭГИЙН');
-  window.SIG_APPROVER = localStorage.getItem('sig_approverName') || 'С.САРАНЧИМЭГ';
-  window.SIG_APPROVE_DATE = localStorage.getItem('sig_approveDate') || '2026 оны .... сарын .... өдөр';
-  window.SIG_TEACHER = localStorage.getItem('sig_teacher') || (window.TEACHER_NAME || 'Г.ӨЛЗИЙБАЯР').toUpperCase();
-}
-function saveField(key, val) {
-  localStorage.setItem('sig_' + key, (val || '').trim());
-  loadFields();
-}
-loadFields();
 
 async function loadOverrides() {
   const { data } = await sb.from('monthly_matrix').select('*');
@@ -528,9 +512,9 @@ function render() {
     <div class="head">
       <div class="right">
         <strong>БАТЛАВ</strong><br>
-        <span contenteditable="true" class="edt" onblur="saveField('org', this.innerText)">${window.SIG_ORG}</span><br>
-        АРГА ЗҮЙЧ ............................. <span contenteditable="true" class="edt" onblur="saveField('approverName', this.innerText)">${window.SIG_APPROVER}</span><br>
-        <span contenteditable="true" class="edt" onblur="saveField('approveDate', this.innerText)">${window.SIG_APPROVE_DATE}</span>
+        ГУРВАНБУЛАГ СУМЫН ЦЭЦЭРЛЭГИЙН<br>
+        АРГА ЗҮЙЧ ................................. С.САРАНЧИМЭГ<br>
+        2026 оны .... сарын .... өдөр
       </div>
       <h1>${L.name} БҮЛГИЙН ХӨГЖМИЙН СУРГАЛТЫН</h1>
       <h1>${mon} ДУГААР САРЫН ТӨЛӨВЛӨГӨӨ</h1>
@@ -627,14 +611,14 @@ function render() {
         </tr>
         <tr>
           <td style="background:#dbeafe;font-weight:600">Гарын үсэг:</td>
-          <td>Арга зүйч ................................. <strong contenteditable="true" class="edt" onblur="saveField('approverName', this.innerText)">${window.SIG_APPROVER}</strong></td>
+          <td>Арга зүйч ..................................... <strong>С.САРАНЧИМЭГ</strong></td>
         </tr>
       </table>
     </div>
 
     <div class="sig">
       ҮЙЛ АЖИЛЛАГААНЫ ТӨЛӨВЛӨЛТ БИЧСЭН:<br><br>
-      ХӨГЖМИЙН БАГШ ................................. <strong contenteditable="true" class="edt" onblur="saveField('teacher', this.innerText)">${window.SIG_TEACHER}</strong>
+      ХӨГЖМИЙН БАГШ ................................. <strong>Г.ӨЛЗИЙБАЯР</strong>
     </div>`;
 
   document.getElementById("plan").innerHTML = html;
