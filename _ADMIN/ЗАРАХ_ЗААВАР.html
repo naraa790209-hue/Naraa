@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="mn"><head><meta charset="UTF-8">
+<title>Худалдагчийн заавар — Хөгжмийн систем</title>
+<style>
+  body{font-family:Arial,sans-serif;max-width:900px;margin:0 auto;padding:24px;color:#222;line-height:1.6;background:#f5f7fa}
+  h1{color:#c62828;border-bottom:3px solid #c62828;padding-bottom:10px}
+  h2{color:#1b5e20;margin-top:28px;padding:8px 14px;background:#e8f5e9;border-radius:6px}
+  h3{color:#37474f;margin-top:18px}
+  .box{background:#fff;padding:18px 22px;border-radius:10px;margin:14px 0;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+  .critical{background:#ffebee;border-left:4px solid #c62828;padding:14px 18px;border-radius:6px;margin:14px 0}
+  .note{background:#fff3e0;border-left:4px solid #ff8f00;padding:12px 18px;border-radius:6px;margin:14px 0}
+  .ok{background:#e8f5e9;border-left:4px solid #2e7d32;padding:12px 18px;border-radius:6px;margin:14px 0}
+  code{background:#eee;padding:2px 8px;border-radius:4px;color:#c62828;font-family:Consolas,monospace}
+  pre{background:#263238;color:#a5d6a7;padding:14px;border-radius:6px;overflow:auto;font-size:.9em;font-family:Consolas,monospace}
+  ol,ul{margin:10px 0 10px 24px}
+  li{margin-bottom:6px}
+  table{border-collapse:collapse;width:100%;margin:12px 0;background:#fff}
+  th,td{border:1px solid #ccc;padding:8px 12px;text-align:left;font-size:.95em}
+  th{background:#e8f5e9}
+  .btn{display:inline-block;padding:10px 18px;background:#2e7d32;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;margin:4px 0}
+</style></head><body>
+
+<h1>💰 Худалдагчийн заавар (Танд зориулав)</h1>
+
+<div class="critical">
+  <b>ЭНЭ БАРИМТЫГ БУСДАД БИТГИЙ ӨГӨӨРЭЙ.</b> Энэ нь зөвхөн танд зориулсан удирдлагын заавар. Энд лиценз үүсгэх, худалдах, хянах бүх алхам бичсэн.
+</div>
+
+<h2>📁 Хавтасны бүтэц</h2>
+<table>
+  <tr><th>Хавтас</th><th>Зориулалт</th></tr>
+  <tr><td><code>ХӨГЖИМ_ӨЛЗИЙ_СИСТЕМ/</code></td><td><b>Эх хувь</b> — таны өөрийн ажлын систем. Хэзээ ч бусдад өгөхгүй.</td></tr>
+  <tr><td><code>ХӨГЖМИЙН_СИСТЕМ_ТҮГЭЭХ/</code></td><td><b>Түгээх хувь</b> — цэвэрлэгдсэн, лицензийн шалгалттай. Багшид ZIP болгож зарна.</td></tr>
+</table>
+
+<h2>🎫 1. Supabase-д лицензийн хүснэгт үүсгэх (нэг удаагийн ажил)</h2>
+<p>Таны Supabase (<code>dehxrmupnbilwlxsovpi.supabase.co</code>) дотор <b>licenses</b> нэртэй хүснэгт үүсгэнэ.</p>
+<ol>
+  <li>Supabase dashboard → SQL Editor → New query</li>
+  <li>Доорх кодыг хуулж наагаад <b>Run</b> дар:</li>
+</ol>
+<pre>create table if not exists licenses (
+  key text primary key,
+  teacher_name text,
+  school text,
+  location text,
+  status text default 'active',           -- active | disabled
+  machine_fp text,                         -- эхний ажиллуулахад бөглөгдөнө
+  created_at timestamptz default now(),
+  activated_at timestamptz,
+  sold_price int,
+  contact text,                            -- утас/facebook
+  notes text
+);
+
+-- ADD & UPDATE — багш идэвхжүүлэх боломжтой байх
+alter table licenses enable row level security;
+create policy "anon_read" on licenses for select using (true);
+create policy "anon_update_own" on licenses for update using (true) with check (true);</pre>
+
+<div class="note">📌 Policy-ийг ил байлгаж байна — багш өөрийн машины fingerprint-ыг эхний удаа бүртгэх ёстой тул. Хүсвэл дараа нь server-side function хийж хамгаалалт нэмж болно.</div>
+
+<h2>🎟️ 2. Багшид зарах бүрд лиценз үүсгэх</h2>
+<h3>А. Түлхүүр үүсгэх</h3>
+<p>Дурын код сонгож болно (жишээ нь: <code>HGJM-2026-001</code>). Санамсаргүй болгож болно:</p>
+<pre>-- Supabase SQL Editor-т:
+insert into licenses (key, teacher_name, school, location, sold_price, contact)
+values ('HGJM-2026-001', 'Б. Дуламсүрэн', '15-р цэцэрлэг', 'Улаанбаатар БЗД', 250000, '99001234');</pre>
+
+<h3>Б. Багшид дараах 3-ыг илгээх</h3>
+<ol>
+  <li><b>ZIP файл</b> — <code>ХӨГЖМИЙН_СИСТЕМ_ТҮГЭЭХ</code> хавтасны ZIP хувилбар</li>
+  <li><b>Лицензийн түлхүүр</b> — <code>HGJM-2026-001</code></li>
+  <li><b>Заавар</b> — ZIP дотор <code>ЗААВАР_БАГШИД.html</code> байгаа</li>
+</ol>
+
+<h2>📊 3. Худалдсан лицензээ хянах</h2>
+<p>Supabase Table Editor → <b>licenses</b> дарж бүх худалдсан лицензийг харна:</p>
+<ul>
+  <li><code>activated_at</code> — багш анх суулгасан огноо (хоосон бол дутуу)</li>
+  <li><code>machine_fp</code> — багшийн компьютерийн ID</li>
+  <li><code>status</code> — <code>active</code> эсвэл <code>disabled</code></li>
+</ul>
+
+<h2>🚫 4. Лиценз цуцлах (дүрэм зөрчигдвөл)</h2>
+<pre>update licenses set status = 'disabled' where key = 'HGJM-2026-001';</pre>
+<p>Дараагийн удаа багш системээ ажиллуулахад <b>Лицензийн алдаа</b> гарч, систем нээгдэхгүй.</p>
+
+<h2>🔄 5. Багш компьютераа солих хүсэлт ирвэл</h2>
+<pre>-- machine_fp-ыг цэвэрлэ, багш дахин суулгаж болно
+update licenses set machine_fp = null where key = 'HGJM-2026-001';</pre>
+
+<h2>📦 6. Түгээх ZIP бэлдэх</h2>
+<ol>
+  <li>File Explorer → <code>ХӨГЖМИЙН_СИСТЕМ_ТҮГЭЭХ</code> хавтас дээр баруун товч</li>
+  <li><b>Send to</b> → <b>Compressed (zipped) folder</b></li>
+  <li><code>ХӨГЖМИЙН_СИСТЕМ.zip</code> файл үүснэ (2-3 MB)</li>
+  <li>Google Drive / MEGA-д байршуулж линкээр илгээ</li>
+</ol>
+
+<h2>🛡️ Хамгаалалтын түвшин</h2>
+<div class="ok">
+  <b>Одоогийн хамгаалалт:</b>
+  <ul>
+    <li>✅ Лицензийн онлайн шалгалт бүр удаа асаахад ажиллана</li>
+    <li>✅ Машины fingerprint — нэг лиценз = нэг компьютер</li>
+    <li>✅ Багш бүрийн нэр, цэцэрлэг header-т ил гардаг усны тэмдэг</li>
+    <li>✅ Setup wizard-гүйгээр систем нээгдэхгүй (config.js байхгүй бол)</li>
+    <li>✅ Багш бүр өөрийн Supabase — таны дата бүрэн тусгаарлагдсан</li>
+  </ul>
+</div>
+<div class="note">
+  <b>Хязгаарлалт:</b> HTML/JS код нь ил тул техник мэддэг хүн лицензийн шалгалтыг устгах онолын боломжтой. Гэхдээ энгийн багшийн хувьд бараг боломжгүй, бас үүнд оролдох сонирхол багатай (үнэ хямд, шаардлагатай бол дахин авах хялбар).
+</div>
+
+<h2>💡 Санал болгож буй үнийн бодлого</h2>
+<table>
+  <tr><th>Багц</th><th>Үнэ</th><th>Юу орсон</th></tr>
+  <tr><td>Үндсэн</td><td>200,000₮</td><td>1 лиценз, 1 жилийн шинэчлэлт, Facebook дэмжлэг</td></tr>
+  <tr><td>Стандарт</td><td>350,000₮</td><td>1 лиценз, 2 жилийн шинэчлэлт, утсаар дэмжлэг</td></tr>
+  <tr><td>Цэцэрлэг</td><td>800,000₮</td><td>3 лиценз (3 багш), удаан хугацааны хамтын ажиллагаа</td></tr>
+</table>
+
+</body></html>
